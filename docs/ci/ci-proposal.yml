@@ -1,0 +1,128 @@
+# PROPOSITION de CI — à relire par le senior, puis à déplacer vers
+# .github/workflows/ci.yml et à commiter par lui (zone interdite à l'IA).
+# Avant de l'activer :
+#  - remplacer chaque <SHA> par le SHA de commit vérifié de l'action (et <digest>
+#    par le digest de l'image), le tag indiqué en commentaire n'est qu'un repère ;
+#  - elle ne passe qu'une fois le projet Gradle créé (fonctionnalité 1).
+# Reportés au plan de F1 : accessibilité automatisée, régression visuelle, SBOM (CycloneDX).
+
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pull-requests: read }
+    outputs:
+      shared: ${{ steps.f.outputs.shared }}
+      app: ${{ steps.f.outputs.app }}
+      server: ${{ steps.f.outputs.server }}
+    steps:
+      - uses: actions/checkout@<SHA>          # v4
+      - id: f
+        uses: dorny/paths-filter@<SHA>        # v3
+        with:
+          filters: |
+            build: &build ['gradle/**', '*.gradle.kts', 'gradle.properties']
+            shared: ['shared/**', *build]
+            app: ['composeApp/**', 'androidApp/**', *build]
+            server: ['server/**', *build]
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: gradle/actions/wrapper-validation@<SHA>   # v4
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@<SHA>
+      - run: ./gradlew detekt ktlintCheck
+
+  shared:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@<SHA>
+      - run: ./gradlew :shared:domain:allTests :shared:contract:allTests
+
+  android:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@<SHA>
+      - run: ./gradlew :composeApp:testDebugUnitTest :androidApp:lint :androidApp:assembleDebug
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@<SHA>
+      - run: ./gradlew :composeApp:wasmJsBrowserTest :composeApp:wasmJsBrowserDistribution
+
+  server:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest        # Docker disponible pour Testcontainers
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@<SHA>
+      - run: ./gradlew :server:test
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@<SHA>  # v2
+        env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+
+  sast-semgrep:
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep@sha256:<digest>
+    steps:
+      - uses: actions/checkout@<SHA>
+      - run: semgrep scan --config p/owasp-top-ten --config p/kotlin --error
+
+  codeql:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: actions/setup-java@<SHA>
+        with: { distribution: temurin, java-version: '21' }
+      - uses: github/codeql-action/init@<SHA>      # v3
+        with: { languages: java-kotlin, build-mode: manual }
+      - run: ./gradlew :shared:domain:jvmJar :shared:contract:jvmJar :server:classes --no-build-cache
+      - uses: github/codeql-action/analyze@<SHA>
+
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<SHA>
+      - uses: google/osv-scanner-action/osv-scanner-action@<SHA>   # v2
+        with: { scan-args: '--recursive ./' }
+      - if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@<SHA>  # v4
+        with: { fail-on-severity: moderate }
