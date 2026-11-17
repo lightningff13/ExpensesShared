@@ -1,5 +1,5 @@
 ---
-name: explorateur
+name: explorer
 description: Explore le dépôt et renvoie un résumé ciblé (fichiers, rôles, dépendances). Lecture seule.
 model: haiku
 effort: low

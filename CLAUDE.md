@@ -5,15 +5,16 @@
 - Carte du projet : @docs/architecture.md
 - La mettre à jour dans toute PR qui change la structure (date + n° de PR en tête).
 - Travail en cours : docs/specs/<feature>.md (lire le journal en début de session).
-- Leçons en observation : docs/ai/lecons.md (non chargé ; le consulter
+- Leçons en observation : docs/ai/lessons.md (non chargé ; le consulter
   quand une erreur se reproduit).
 
 ## Stack imposée
 - Langage : Kotlin (Kotlin Multiplatform), build Gradle Kotlin DSL,
   versions centralisées dans gradle/libs.versions.toml.
 - Package racine : com.expensesshared
-- Modules : shared (domaine), composeApp (UI Compose Multiplatform + client API),
-  androidApp (Android 10+, API 29), server (Ktor). Chaque module a son CLAUDE.md.
+- Modules : shared:domain (entités et règles), shared:contract (DTO d'API),
+  composeApp (UI Compose Multiplatform + client API), androidApp (Android 10+,
+  API 29), server (Ktor). Chaque module a son CLAUDE.md (shared/ en couvre deux).
 - Plateformes : Android et web (Wasm, repli JS). iOS et extension : hors V1.
 - Base de données : PostgreSQL ; accès via Exposed (DSL, jamais de SQL concaténé) ;
   migrations Flyway (zone sensible, revue senior). Cache Android : SQLDelight.
@@ -34,10 +35,20 @@
   Toute autre dépendance : justifiée dans la PR, existence et maintenance vérifiées.
 
 ## Règles métier transverses
-- Montants : Long en centimes d'euro encapsulés dans un type dédié ; jamais de
+- Montants : Long en centimes d'euro encapsulés dans le type Amount ; jamais de
   Float/Double/BigDecimal pour un montant stocké ou transmis.
 - Toute règle d'arrondi est écrite dans la spec, validée par le senior et testée
   (somme des parts == montant total, toujours). Ne jamais inventer une règle métier.
+
+## Architecture (ADR-0002, docs/adr/0002-layered-architecture.md)
+- Les dépendances pointent vers le domaine : shared:domain ne dépend de rien ;
+  aucune annotation de framework dans shared:domain ni dans les couches application.
+- Un cas d'utilisation par action, dans la couche application ; les routes Ktor
+  et les view-models ne contiennent aucune règle métier.
+- Accès aux données et au réseau uniquement via des ports (interfaces) de la
+  couche application, implémentés par les adaptateurs.
+- Résultats typés (sealed) ; traduction en code HTTP dans adapters.http.
+- Injection manuelle, assemblage dans les racines de composition uniquement.
 
 ## Façon de travailler
 Suivre la skill workflow-dev-securise-ia : maquettes validées et plan
@@ -45,7 +56,18 @@ approuvé avant tout code, branche dédiée feat/<sujet>, TDD en suivant TPP
 (transformations ci-dessous), PR de moins de 400 lignes, code partagé d'abord.
 Modèle et effort par phase : conception sur Opus effort élevé,
 exécution déléguée aux sous-agents de .claude/agents/.
-Toute PR touchant shared/ est de risque élevé → implementeur-critique.
+Toute PR touchant shared/ est de risque élevé → critical-implementer.
+
+Correspondance avec les noms de la skill :
+| Skill | Sous-agent du projet |
+|---|---|
+| explorateur | explorer |
+| maquettiste | mockup-designer |
+| implementeur | implementer |
+| implementeur-critique | critical-implementer |
+| relecteur | reviewer |
+Chemins de la skill renommés : docs/maquettes/ → docs/mockups/,
+docs/ai/lecons.md → docs/ai/lessons.md.
 
 ## Transformations TPP
 Pour faire passer chaque test rouge, appliquer la transformation la plus simple,
@@ -79,7 +101,8 @@ Adaptations Kotlin :
 - Échapper les sorties ; pas d'eval ni d'insertion HTML brute (index.html, CSV :
   neutraliser l'injection de formules = + - @ en début de cellule).
 - Vérifier l'autorisation sur chaque ressource (appartenance au groupe, rôle
-  créateur, auteur de la dépense), pas seulement l'authentification.
+  créateur, auteur de la dépense) dans le cas d'utilisation serveur, pas
+  seulement l'authentification, et jamais uniquement dans la route ou le client.
   Identifiants de ressources non devinables (UUID) ; 404 pour « pas membre ».
 - Secrets uniquement via variables d'environnement lues par le module de config
   du serveur ; jamais dans le dépôt.
@@ -87,7 +110,9 @@ Adaptations Kotlin :
 - Primitives crypto de la plateforme uniquement.
 
 ## Leçons intégrées
-<ajoutées par le senior au fil des PR>
+- L-1 — Noms de fichiers, de dossiers et identifiants de code en anglais ;
+  contenu des documents en français. (Origine : correction du senior, PR 1,
+  2026-11-17 ; portée : tout le projet.)
 
 ## Interdit
 - Modifier sans demande explicite du senior : .github/workflows/ (et toute config CI/CD),

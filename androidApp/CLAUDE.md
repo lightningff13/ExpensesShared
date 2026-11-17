@@ -1,6 +1,7 @@
 # Module androidApp — application Android
 
-- Rôle : point d'entrée Activity, manifeste, configuration de build, cache SQLDelight.
+- Rôle : racine de composition Android (Activity, assemblage), manifeste,
+  configuration de build. Le cache SQLDelight est un adaptateur de composeApp (data).
 - minSdk 29 (Android 10) ; targetSdk = dernière version stable exigée par Play.
 - Manifeste : permissions minimales (INTERNET seulement en V1) ; toute nouvelle
   permission bloque la PR tant qu'elle n'est pas justifiée.

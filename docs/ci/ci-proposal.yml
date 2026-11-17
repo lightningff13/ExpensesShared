@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-java@<SHA>
         with: { distribution: temurin, java-version: '21' }
       - uses: gradle/actions/setup-gradle@<SHA>
-      - run: ./gradlew :shared:allTests
+      - run: ./gradlew :shared:domain:allTests :shared:contract:allTests
 
   android:
     needs: changes
@@ -114,7 +114,7 @@ jobs:
         with: { distribution: temurin, java-version: '21' }
       - uses: github/codeql-action/init@<SHA>      # v3
         with: { languages: java-kotlin, build-mode: manual }
-      - run: ./gradlew :shared:jvmJar :server:classes --no-build-cache
+      - run: ./gradlew :shared:domain:jvmJar :shared:contract:jvmJar :server:classes --no-build-cache
       - uses: github/codeql-action/analyze@<SHA>
 
   dependencies:

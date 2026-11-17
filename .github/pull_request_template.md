@@ -3,7 +3,7 @@
 
 ## Niveau de risque proposé : Faible / Moyen / Élevé
 ## Modèles utilisés
-<implémentation : implementeur / implementeur-critique ; relecture : relecteur>
+<implémentation : implementer / critical-implementer ; relecture : reviewer>
 ## Modules et plateformes impactés
 <shared / composeApp / androidApp / server ; Android / web ; impact indirect via shared>
 ## Zones sensibles touchées
@@ -41,6 +41,6 @@ issue recommandée (intégrer / observer / rejeter) et texte exact à ajouter
 - [ ] Sous-agent d'implémentation cohérent avec le niveau de risque
 - [ ] Carte du projet à jour
 - [ ] Leçons proposées tranchées (intégrées, en observation ou rejetées)
-- [ ] Montants manipulés uniquement en centimes (type Montant), somme des parts == total testée
+- [ ] Montants manipulés uniquement en centimes (type Amount), somme des parts == total testée
 - [ ] Toute route nouvelle ou modifiée a un test d'accès refusé (non-membre → 404, membre non autorisé → 403)
 - [ ] Export CSV : cellules neutralisées contre l'injection de formules
