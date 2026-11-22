@@ -1,9 +1,9 @@
-# PROPOSITION de CI — à relire par le senior, puis à déplacer vers
+# PROPOSITION de CI — à relire par le senior, puis à copier vers
 # .github/workflows/ci.yml et à commiter par lui (zone interdite à l'IA).
-# Avant de l'activer :
-#  - remplacer chaque <SHA> par le SHA de commit vérifié de l'action (et <digest>
-#    par le digest de l'image), le tag indiqué en commentaire n'est qu'un repère ;
-#  - elle ne passe qu'une fois le projet Gradle créé (fonctionnalité 1).
+# - Actions épinglées par SHA de commit (résolu le 2026-11-22 depuis les tags
+#   officiels), version ≥ 14 jours au moment de l'épinglage ; le tag en
+#   commentaire est un repère pour Dependabot et la relecture.
+# - Elle ne passe qu'une fois le projet Gradle créé (fonctionnalité 1).
 # Reportés au plan de F1 : accessibilité automatisée, régression visuelle, SBOM (CycloneDX).
 
 name: CI
@@ -26,9 +26,9 @@ jobs:
       app: ${{ steps.f.outputs.app }}
       server: ${{ steps.f.outputs.server }}
     steps:
-      - uses: actions/checkout@<SHA>          # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
       - id: f
-        uses: dorny/paths-filter@<SHA>        # v3
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d        # v4.0.3
         with:
           filters: |
             build: &build ['gradle/**', '*.gradle.kts', 'gradle.properties']
@@ -39,11 +39,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: gradle/actions/wrapper-validation@<SHA>   # v4
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c   # v6.4.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@<SHA>
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c         # v6.4.1
       - run: ./gradlew detekt ktlintCheck
 
   shared:
@@ -51,10 +51,10 @@ jobs:
     if: needs.changes.outputs.shared == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@<SHA>
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c         # v6.4.1
       - run: ./gradlew :shared:domain:allTests :shared:contract:allTests
 
   android:
@@ -62,10 +62,10 @@ jobs:
     if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@<SHA>
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c         # v6.4.1
       - run: ./gradlew :composeApp:testDebugUnitTest :androidApp:lint :androidApp:assembleDebug
 
   web:
@@ -73,10 +73,10 @@ jobs:
     if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@<SHA>
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c         # v6.4.1
       - run: ./gradlew :composeApp:wasmJsBrowserTest :composeApp:wasmJsBrowserDistribution
 
   server:
@@ -84,45 +84,45 @@ jobs:
     if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest        # Docker disponible pour Testcontainers
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@<SHA>
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c         # v6.4.1
       - run: ./gradlew :server:test
 
   secrets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@<SHA>  # v2
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
         env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
 
   sast-semgrep:
     runs-on: ubuntu-latest
-    container: semgrep/semgrep@sha256:<digest>
+    container: semgrep/semgrep@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0   # 1.183.0
     steps:
-      - uses: actions/checkout@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
       - run: semgrep scan --config p/owasp-top-ten --config p/kotlin --error
 
   codeql:
     runs-on: ubuntu-latest
     permissions: { contents: read, security-events: write }
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: actions/setup-java@<SHA>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78        # v6.2.0
         with: { distribution: temurin, java-version: '21' }
-      - uses: github/codeql-action/init@<SHA>      # v3
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066    # v4.39.3
         with: { languages: java-kotlin, build-mode: manual }
       - run: ./gradlew :shared:domain:jvmJar :shared:contract:jvmJar :server:classes --no-build-cache
-      - uses: github/codeql-action/analyze@<SHA>
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
 
   dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<SHA>
-      - uses: google/osv-scanner-action/osv-scanner-action@<SHA>   # v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1          # v7.0.1
+      - uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36   # v2.7.0
         with: { scan-args: '--recursive ./' }
       - if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@<SHA>  # v4
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294   # v5.0.0
         with: { fail-on-severity: moderate }

@@ -1,0 +1,19 @@
+# PROPOSITION Dependabot — à relire par le senior, puis à copier vers
+# .github/dependabot.yml et à commiter par lui (configuration CI/CD).
+# Met à jour les SHA épinglés des actions (en gardant le tag en commentaire),
+# avec un délai de 14 jours après publication avant de proposer une version.
+# L'écosystème gradle sera ajouté avec le projet Gradle (fonctionnalité 1).
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: chore
