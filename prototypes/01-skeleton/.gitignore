@@ -1,0 +1,10 @@
+# Build outputs and local tooling for the standalone prototype build
+.gradle/
+.kotlin/
+build/
+**/build/
+local.properties
+*.iml
+.idea/
+captures-tmp/
+node_modules/

@@ -1,0 +1,17 @@
+# Prototype-local version catalog. Every entry is justified in ../README.md.
+[versions]
+kotlin = "2.4.21"
+# 1.12.x pulls androidx.compose 1.12 which needs compileSdk 37 (platform not installed here).
+compose-multiplatform = "1.11.1"
+agp = "9.5.1"
+activity-compose = "1.13.0"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
